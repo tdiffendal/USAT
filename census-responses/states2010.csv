@@ -1,53 +1,53 @@
-﻿State,Geo_Type,response2000,response2010,,,,,
-Alabama,State ,68.0,72.0,,,,,
-Alaska,State ,67.0,64.0,,,,,
-Arizona,State ,70.0,69.0,,,,,
-Arkansas,State ,70.0,69.0,,,,,
-California,State ,76.0,73.0,,,,,
-Colorado,State ,75.0,72.0,,,,,
-Connecticut,State ,78.0,76.0,,,,,
-Delaware,State ,71.0,72.0,,,,,
-District of Columbia,State ,69.0,72.0,,,,,
-Florida,State ,71.0,74.0,,,,,
-Georgia,State ,72.0,72.0,,,,,
-Hawaii,State ,66.0,68.0,,,,,
-Idaho,State ,77.0,76.0,,,,,
-Illinois,State ,76.0,76.0,,,,,
-Indiana,State ,79.0,79.0,,,,,
-Iowa,State ,82.0,79.0,,,,,
-Kansas,State ,78.0,76.0,,,,,
-Kentucky,State ,72.0,77.0,,,,,
-Louisiana,State ,68.0,65.0,,,,,
-Maine,State ,67.0,68.0,,,,,
-Maryland,State ,76.0,76.0,,,,,
-Massachusetts,State ,76.0,75.0,,,,,
-Michigan,State ,79.0,78.0,,,,,
-Minnesota,State ,81.0,81.0,,,,,
-Mississippi,State ,70.0,69.0,,,,,
-Missouri,State ,76.0,74.0,,,,,
-Montana,State ,72.0,68.0,,,,,
-Nebraska,State ,81.0,77.0,,,,,
-Nevada,State ,71.0,71.0,,,,,
-New Hampshire,State ,74.0,73.0,,,,,
-New Jersey,State ,76.0,74.0,,,,,
-New Mexico,State ,68.0,65.0,,,,,
-New York,State ,69.0,69.0,,,,,
-North Carolina,State ,69.0,76.0,,,,,
-North Dakota,State ,78.0,74.0,,,,,
-Ohio,State ,79.0,78.0,,,,,
-Oklahoma,State ,71.0,68.0,,,,,
-Oregon,State ,77.0,76.0,,,,,
-Pennsylvania,State ,78.0,77.0,,,,,
-Rhode Island,State ,73.0,73.0,,,,,
-South Carolina,State ,68.0,75.0,,,,,
-South Dakota,State ,80.0,76.0,,,,,
-Tennessee,State ,72.0,76.0,,,,,
-Texas,State ,70.0,71.0,,,,,
-Utah,State ,74.0,75.0,,,,,
-Vermont,State ,68.0,69.0,,,,,
-Virginia,State ,76.0,78.0,,,,,
-Washington,State ,75.0,76.0,,,,,
-West Virginia,State ,68.0,65.0,,,,,
-Wisconsin,State ,85.0,82.0,,,,,
-Wyoming,State ,75.0,69.0,,,,,
-Puerto Rico,State ,54.0,54.0,,,,,
+﻿State,Geo_Type,2000_rate,2010_rate
+Alabama,State ,68,72
+Alaska,State ,67,64
+Arizona,State ,70,69
+Arkansas,State ,70,69
+California,State ,76,73
+Colorado,State ,75,72
+Connecticut,State ,78,76
+Delaware,State ,71,72
+District of Columbia,State ,69,72
+Florida,State ,71,74
+Georgia,State ,72,72
+Hawaii,State ,66,68
+Idaho,State ,77,76
+Illinois,State ,76,76
+Indiana,State ,79,79
+Iowa,State ,82,79
+Kansas,State ,78,76
+Kentucky,State ,72,77
+Louisiana,State ,68,65
+Maine,State ,67,68
+Maryland,State ,76,76
+Massachusetts,State ,76,75
+Michigan,State ,79,78
+Minnesota,State ,81,81
+Mississippi,State ,70,69
+Missouri,State ,76,74
+Montana,State ,72,68
+Nebraska,State ,81,77
+Nevada,State ,71,71
+New Hampshire,State ,74,73
+New Jersey,State ,76,74
+New Mexico,State ,68,65
+New York,State ,69,69
+North Carolina,State ,69,76
+North Dakota,State ,78,74
+Ohio,State ,79,78
+Oklahoma,State ,71,68
+Oregon,State ,77,76
+Pennsylvania,State ,78,77
+Rhode Island,State ,73,73
+South Carolina,State ,68,75
+South Dakota,State ,80,76
+Tennessee,State ,72,76
+Texas,State ,70,71
+Utah,State ,74,75
+Vermont,State ,68,69
+Virginia,State ,76,78
+Washington,State ,75,76
+West Virginia,State ,68,65
+Wisconsin,State ,85,82
+Wyoming,State ,75,69
+Puerto Rico,State ,54,54
