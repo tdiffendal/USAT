@@ -1,0 +1,15 @@
+#ignore folders:
+counties/
+plots/
+shapefiles/
+states/
+summary_stats/
+
+#ignore files:
+*.RData
+#.Rhistory
+t_county_edits.R
+county_level_analysis_061020.R
+ZIP_code_level_analysis_061020.R
+city_level_data_analysis_061020.R
+congdist_combined_final.csv
