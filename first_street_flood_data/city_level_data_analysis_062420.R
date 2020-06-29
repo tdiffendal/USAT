@@ -2,15 +2,11 @@
 # by First Street.
 # This data does not contain estimates for the numbers of
 # properties deemed at risk under FEMA's model. It only
-# contains first street's data. 
+# contains first street's data
 
-# load libraries
-# install.packages("tidyverse")
-# install.packages("sf")
-# install.packages("viridis")
-# install.packages("leaflet")
-# install.packages("ggalt")
-# install.packages("tigris")
+## Kevin Crowe
+## edits by Theresa Diffendal
+
 library(tidyverse)
 library(ggalt)
 library(sf)
@@ -78,7 +74,7 @@ census.places <- census.places %>%
 # Join the census and flood data to get total populations
 flood.cities <- flood.cities %>%
   left_join(census.places, by = c("city_id" = "city_id")) %>%
-  select(city:state, city_id, total_population = AJWME001, total_properties:fs_fema_risk_deviation_2020_pct)
+  select(city:state, city_id, total_population = AJWME001, total_properties:fs_fema_risk_deviation_2020,fs_fema_risk_deviation_2020_pct, lat, long)
 
 rm(census.places)
 
@@ -114,32 +110,23 @@ write_csv(flood.cities, paste0("cities/cities_", num_states, "_states_for_USAT_n
 
 flood.cities <- read.csv("cities/cities_49_states_for_USAT_network_061220.csv")
 
-chicago <- flood.cities %>%
-  filter(city == 'Chicago' )
 
-la <- flood.cities %>%
-  filter(city == 'Los Angeles',
-         state == 'ca')
+#### pull out stats for cities we want to look at
+interest <- flood.cities %>%
+  filter(city == 'Chicago' |
+           (city == 'Los Angeles' &
+           state == 'ca') |
+  city == 'New York' |
+  city == 'Rand' |
+  (city == 'Charleston' &
+         state == 'wv') |
+  city == 'Fort Myers' |
+  (city == 'Jacksonville' &
+         state == 'fl') |
+  city == 'New Orleans') %>%
+  arrange(city)
 
-ny <- flood.cities %>%
-  filter(city == 'New York' )
-
-rand <- flood.cities %>%
-  filter(city == 'Rand' )
-
-charles <- flood.cities %>%
-  filter(city == 'Charleston',
-         state == 'wv')
-
-meyers <- flood.cities %>%
-  filter(city == 'Fort Myers' )
-
-jack <- flood.cities %>%
-  filter(city == 'Jacksonville',
-         state == 'fl')
-
-orleans <- flood.cities %>%
-  filter(city == 'New Orleans' )
+##### FS' arizona numbers low?
 
 arizona <- flood.cities %>% 
   filter(state=='az')
@@ -152,12 +139,22 @@ femaest <- flood.cities %>%
   count()
 
 ######################
-## biggest states
+## biggest states by pop
 
-biggest <- flood.cities %>%
+biggestPop <- flood.cities %>%
   arrange(desc(total_population)) %>%
   slice(1:10)
 
+biggestProp <- flood.cities %>%
+  arrange(desc(total_properties)) %>%
+  slice(1:10)
+
+### biggest differences between fema and fs 2020 -- checking for Rand, WV
+biggestDif <- flood.cities %>%
+  mutate(pct_diff_2020 = pct_risk_2020 - pct_fema_risk ) %>%
+  #filter(pct_diff_2020) %>%
+  arrange(desc(pct_diff_2020)) %>%
+  slice(1:50)
 
 ## find by what percent the total # of houses at risk per fs is bigger/smaller than fema total#
 print(
@@ -165,6 +162,7 @@ print(
    * 100) 
   / sum(biggest$fema_risk)
 )
+# answer: 155.2198%
 
 # Organize the city data for export and sharing
 #flood.cities %>%

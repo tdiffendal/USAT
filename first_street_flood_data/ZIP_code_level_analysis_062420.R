@@ -241,6 +241,12 @@ rm(list=ls())
 #load merged flood and census data
 flood.zips <- read.csv("ZIP/ZIPs_49_states_for_USAT_network_061220.csv")
 
+## home
+flood.zips %>%
+  filter(zipcode == '20782' | 
+           zipcode == '15057') %>%
+  view
+
 # For now, I'm just going to pull out a set of
 # ZIPs that have high(ish) populations and a big
 # delta between FEMA and First Street flood risk
@@ -343,6 +349,12 @@ print(n-i)
 print((n-i)/i)
 rm(i,n)
 
+#how many inf values are there? or fema says 0 at risk but fs says > 0
+chicago %>%
+  #group_by(fs_fema_difference_2020_total) %>%
+  filter(fema_properties_at_risk_2020_total == 0) %>%
+  #summarise(sum(fs_fema_difference_2020_total)) #%>%
+  print(n=35)
 
 #ten worst cities by prop and stats and fs-fema
 top.pop <- chicago %>%
@@ -389,11 +401,4 @@ high_black %>%
   summarise(sum(fs_fema_difference_2020_total))
 
 # returns error, but this is the idea
-chicago[-high_black]$fs_fema_difference_2020_pct
-
-#how many inf values are there? or fema says 0 at risk but fs says > 0
-chicago %>%
-  #group_by(fs_fema_difference_2020_total) %>%
-  filter(fema_properties_at_risk_2020_total == 0) %>%
-  #summarise(sum(fs_fema_difference_2020_total)) #%>%
-  print(n=35)
+chicago[fs_fema_difference_2020_pct, -high_black]

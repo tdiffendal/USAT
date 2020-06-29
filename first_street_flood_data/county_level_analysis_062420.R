@@ -19,72 +19,33 @@ library(janitor)
 # Set the working directory
 setwd("~/GitHub/USAT/first_street_flood_data")
 
-temp <- read_csv("counties/county_combined.csv") %>%
+#### read in county data file
+flood.counties <- read_csv("counties/County_level_risk_FEMA_FSF_updated_062320.csv", col_types = "cccddiididididid") %>%
   clean_names() %>%
-  mutate(fs_fema_difference_2020_pct = (fs_fema_difference_2020_total*100)/fema_properties_at_risk_2020_total) %>%
-  select(location_name, 
+  select(county, state,
          total_properties,
-         fema_properties_at_risk_2020_total,
-         fema_properties_at_risk_2020_pct,
-         fs_properties_at_risk_2020_total,
-         fs_properties_at_risk_2020_pct,
-         fs_properties_at_risk_2035_total,
-         fs_properties_at_risk_2035_pct,
-         fs_properties_at_risk_2050_total,
-         fs_properties_at_risk_2050_pct,
-         fs_fema_difference_2020_total,
-         fs_fema_difference_2020_pct,
+         fema_2020 = fema_properties_at_risk_2020_total,
+         fema_2020_pct = fema_properties_at_risk_2020_pct,
+         fs_2020 = fs_properties_at_risk_2020_total,
+         fs_2020_pct = fs_properties_at_risk_2020_pct,
+         fs_2035 = fs_properties_at_risk_2035_total,
+         fs_2035_pct = fs_properties_at_risk_2035_pct,
+         fs_2050 = fs_properties_at_risk_2050_total,
+         fs_2050_pct = fs_properties_at_risk_2050_pct,
+         fs_fema_diff = fs_fema_difference_2020_total,
+         fs_fema_diff_pct = fs_fema_difference_2020_pct,
          county_fips,
          latitude,
          longitude)
 
-write_csv(temp, "counties/county_combined_clean.csv")
-
-rm(temp)
-
-################################
-### clean final version
-colnames(temp)
-temp <- read_csv('counties/county_combined_final.csv',col_types = "cciddiididididid") %>%
-  clean_names() %>%
-  select(county, 
-         total_properties,
-         fema_properties_at_risk_2020_total,
-         fema_properties_at_risk_2020_pct,
-         fs_properties_at_risk_2020_total,
-         fs_properties_at_risk_2020_pct,
-         fs_properties_at_risk_2035_total,
-         fs_properties_at_risk_2035_pct,
-         fs_properties_at_risk_2050_total,
-         fs_properties_at_risk_2050_pct,
-         fs_fema_difference_2020_total,
-         fs_fema_difference_2020_pct,
-         county_fips,
-         latitude,
-         longitude) %>%
-  write_csv("counties/county_combined_final_clean.csv")
-
-rm(temp)
-
-####################################
-
-# load the data
-flood.counties <- read_csv("counties/county_combined_final_clean.csv",
-                           col_types = "ciidididididcdd")
-
 # Check data types -- looks good
 str(flood.counties)
 
-# Change the column headers for the flood data
-colnames(flood.counties) <- c("countyName","totalProperties","FEMAatRisk2020","FEMAatRisk2020pct",
-                              "FSatRisk2020","FSatRisk2020pct","FSatRisk2035","FSatRisk2035pct",
-                              "FSatRisk2050","FSatRisk2050pct","FSfemaDiff","FSfemaDiffpct",
-                              "countyFIPS","latitude","longitude")
 
 # Load the census data that has population, household income,
 # race and poverty. 
 census.county <- read_csv("census/nhgis0068_csv/nhgis0068_ds239_20185_2018_county.csv",
-                   col_types = cols(
+                          col_types = cols(
                      GISJOIN = col_character(),
                      YEAR = col_character(),
                      REGIONA = col_character(),
@@ -208,40 +169,40 @@ census.county <- read_csv("census/nhgis0068_csv/nhgis0068_ds239_20185_2018_count
 
 # Create a FIPS column in the census data
 census.county <- census.county %>%
-  mutate(FIPS = paste0(STATEA, COUNTYA))
+  mutate(FIPS = paste0(STATEA, COUNTYA)) 
+
+census.county$FIPS <- as.character(census.county$FIPS)
 
 # Some of the FIPS codes in the flood data had leading 
 # zeroes cut off
 flood.counties %>%
-  mutate(length = nchar(countyFIPS)) %>%
+  mutate(length = nchar(county_fips)) %>%
   group_by(length) %>%
   count()
-# There are 217 counties that had a leading zero cut
+# There are 275 counties that had a leading zero cut
 
 # Create a new column "FIPS" that has the appropriate codes
 flood.counties <- flood.counties %>%
-  mutate(FIPS = case_when(nchar(countyFIPS) == 4 ~ paste0("0", countyFIPS),
-                                nchar(countyFIPS) == 5 ~ countyFIPS))
+  mutate(fips = case_when(nchar(county_fips) == 4 ~ paste0("0", county_fips),
+                                nchar(county_fips) == 5 ~ county_fips))
 
 
 # add state name, etc., to the flood data
 flood.counties <- flood.counties %>%
-  inner_join(census.county, by = c("FIPS" = "FIPS")) %>%
-  select(countyName:FIPS, STATE, STATEA, COUNTY, COUNTYA, totalPop = AJWME001)
+  inner_join(census.county, by = c("fips" = "FIPS")) %>%
+  select(county:state, total_population = AJWME001, total_properties:fips, state_name=STATE, STATEA, COUNTYA)
   
 # Format and export the county-level data for 
 # the network
 #number states for naming
-num_states = length(unique(flood.counties$STATE))
+num_states = length(unique(flood.counties$state_name))
 
-flood.counties %>%
-  select(state = STATE, countyName, FIPS = FIPS, total_population = totalPop,
-         everything()) %>%
-  mutate_at(vars(FEMAatRisk2020pct, FSatRisk2020pct, FSatRisk2035pct, FSatRisk2050pct, FSfemaDiffpct), funs(round(., 1))) %>%
-  as.data.frame(gsub("\\.0", '', as.matrix())) %>%
-  write_csv(paste0("counties/counties_", num_states, "_states_for_USAT_network_061220.csv"))
-  
-  colnames(flood.counties)
+#flood.counties %>%
+#  select(state = state_name, #countyName, FIPS = FIPS, #total_population = #total_population,
+#         everything()) %>%
+#  mutate_at(vars(fema_2020_pct, fs_2020_pct, fs_2035_pct, fs_2050_pct, FSfemaDiffpct), funs(round(., 1))) %>%
+#  as.data.frame(gsub("\\.0", '', as.matrix())) %>%
+  write_csv(flood.counties, paste0("counties/counties_", num_states, "_clean_062520.csv"))
 
 
 #----------------------------
@@ -250,56 +211,54 @@ flood.counties %>%
 # figures
 #----------------------------
 #----------------------------
+  
+## read in clean data
+flood.counties <- read.csv(paste0("counties/counties_", num_states, "_clean_062520.csv"))
 
 # Aggregate figures by state and check against
 # data Matthew Elby sent
-flood.counties %>%
-  group_by(STATE) %>%
-  summarise(totalProperties = sum(totalProperties),
-            FEMAatRisk2020 = sum(FEMAatRisk2020),
-            FEMAatRisk2020pct = round((sum(FEMAatRisk2020)/sum(totalProperties))*100,1),
-            FSatRisk2020 = sum(FSatRisk2020),
-            FSatRisk2020pct = round((sum(FSatRisk2020)/sum(totalProperties))*100,1),
-            FSatRisk2035 = sum(FSatRisk2035),
-            FSatRisk2035pct = round((sum(FSatRisk2035)/sum(totalProperties))*100,1),
-            FSatRisk2050 = sum(FSatRisk2050),
-            FSatRisk2050pct = round((sum(FSatRisk2050)/sum(totalProperties))*100,1)) %>%
-  arrange(desc(FSatRisk2020pct))
+
+state.totals <- flood.counties %>%
+    group_by(state_name) %>%
+    summarise(total_properties = sum(total_properties),
+              fema_2020 = sum(fema_2020),
+              fema_2020_pct = round((sum(fema_2020)/sum(total_properties)),3),
+              fs_2020 = sum(fs_2020),
+              fs_2020_pct = round((sum(fs_2020)/sum(total_properties)),3),
+              fs_2035 = sum(fs_2035),
+              fs_2035_pct = round((sum(fs_2035)/sum(total_properties)),3),
+              fs_2050 = sum(fs_2050),
+              fs_2050_pct = round((sum(fs_2050)/sum(total_properties)),3),
+              fs_fema_diff = sum(fs_2020) - sum(fema_2020),
+              fs_fema_diff_pct = round((sum(fs_2020) - sum(fema_2020))/sum(fema_2020),3))
+  
+  #number of states where at least 1 in 10 props at risk
+  state.totals %>%
+    filter(fs_2050_pct >= .1) %>%
+    count()
 
 
 # Write the state-level summary stats out to a CSV:
-flood.counties %>%
-  group_by(STATE) %>%
-  summarise(totalProperties = sum(totalProperties),
-            FEMAatRisk2020 = sum(FEMAatRisk2020),
-            FEMAatRisk2020pct = round((sum(FEMAatRisk2020)/sum(totalProperties)),3),
-            FSatRisk2020 = sum(FSatRisk2020),
-            FSatRisk2020pct = round((sum(FSatRisk2020)/sum(totalProperties)),3),
-            FSatRisk2035 = sum(FSatRisk2035),
-            FSatRisk2035pct = round((sum(FSatRisk2035)/sum(totalProperties)),3),
-            FSatRisk2050 = sum(FSatRisk2050),
-            FSatRisk2050pct = round((sum(FSatRisk2050)/sum(totalProperties)),3),
-            Diff_FEMA_FS_props_2020 = sum(FSatRisk2020) - sum(FEMAatRisk2020),
-            Diff_FEMA_FS_props_2020_pct = round((sum(FSatRisk2020) - sum(FEMAatRisk2020))/sum(FEMAatRisk2020),3)) %>%
-  arrange(desc(FSatRisk2020pct)) %>%
-  write_csv(paste0("summary_stats/aggregates_", num_states, "_states_risk_percentages_061120.csv"))
+state.totals %>%
+  arrange(desc(fs_2020_pct)) %>%
+  write_csv(paste0("summary_stats/aggregates_", num_states, "_states_risk_percentages_062520.csv"))
 
 
 # Make a dumbbell plot of the state totals
 flood.counties %>%
-  group_by(state = STATE) %>%
-  summarise(totalProperties = sum(totalProperties),
-            FEMAatRisk2020 = sum(FEMAatRisk2020),
-            FEMAatRisk2020pct = round((sum(FEMAatRisk2020)/sum(totalProperties))*100,1),
-            FSatRisk2020 = sum(FSatRisk2020),
-            FSatRisk2020pct = round((sum(FSatRisk2020)/sum(totalProperties))*100,1)) %>%
-  arrange(FSatRisk2020pct) %>%
+  group_by(state = state_name) %>%
+  summarise(total_properties = sum(total_properties),
+            fema_2020 = sum(fema_2020),
+            fema_2020_pct = round((sum(fema_2020)/sum(total_properties))*100,1),
+            fs_2020 = sum(fs_2020),
+            fs_2020_pct = round((sum(fs_2020)/sum(total_properties))*100,1)) %>%
+  arrange(fs_2020_pct) %>%
   mutate(state_label = factor(state, unique(state))) %>%
-  ggplot(aes(x = FEMAatRisk2020pct, xend = FSatRisk2020pct, y = state_label)) +
+  ggplot(aes(x = fema_2020_pct, xend = fs_2020_pct, y = state_label)) +
   geom_dumbbell(color = "#a3c4dc", size_x = 3.5, size_xend = 3.5, colour_x="#edae52", colour_xend = "#9fb059") +
   geom_text(color="black", size=3, hjust= 1.5,
-            aes(x=FEMAatRisk2020pct, label=paste0(FEMAatRisk2020pct,"%"))) +
-  geom_text(aes(x=FSatRisk2020pct, label= paste0(FSatRisk2020pct,"%")), 
+            aes(x=fema_2020_pct, label=paste0(fema_2020_pct,"%"))) +
+  geom_text(aes(x=fs_2020_pct, label= paste0(fs_2020_pct,"%")), 
             color="black", size=3, hjust=-0.35) +
   labs(x= "Percentage of properties at risk", y=NULL, 
        title="FEMA Risk vs First Street Risk", 
@@ -308,44 +267,26 @@ flood.counties %>%
   theme_gray()
 
 
-# What are the total figures for far for the 25 states?
+# What are the total figures so far for the 49 states?
 national.totals <- flood.counties %>%
-  summarise(totalProperties = sum(totalProperties),
-            FEMAatRisk2020 = sum(FEMAatRisk2020),
-            FEMAatRisk2020pct = round((sum(FEMAatRisk2020)/sum(totalProperties)),3),
-            FSatRisk2020 = sum(FSatRisk2020),
-            FSatRisk2020pct = round((sum(FSatRisk2020)/sum(totalProperties)),3),
-            FSatRisk2035 = sum(FSatRisk2035),
-            FSatRisk2035pct = round((sum(FSatRisk2035)/sum(totalProperties)),3),
-            FSatRisk2050 = sum(FSatRisk2050),
-            FSatRisk2050pct = round((sum(FSatRisk2050)/sum(totalProperties)),3),
-            Diff_FEMA_FS_props_2020 = sum(FSatRisk2020) - sum(FEMAatRisk2020),
-            Diff_FEMA_FS_props_2020_pct = round((sum(FSatRisk2020) - sum(FEMAatRisk2020))/sum(FEMAatRisk2020),3)) 
-
-# State totals
-state.totals <- flood.counties %>%
-  group_by(STATE) %>%
-  summarise(totalProperties = sum(totalProperties),
-            FEMAatRisk2020 = sum(FEMAatRisk2020),
-            FEMAatRisk2020pct = round((sum(FEMAatRisk2020)/sum(totalProperties)),3),
-            FSatRisk2020 = sum(FSatRisk2020),
-            FSatRisk2020pct = round((sum(FSatRisk2020)/sum(totalProperties)),3),
-            FSatRisk2035 = sum(FSatRisk2035),
-            FSatRisk2035pct = round((sum(FSatRisk2035)/sum(totalProperties)),3),
-            FSatRisk2050 = sum(FSatRisk2050),
-            FSatRisk2050pct = round((sum(FSatRisk2050)/sum(totalProperties)),3),
-            Diff_FEMA_FS_props_2020 = sum(FSatRisk2020) - sum(FEMAatRisk2020),
-            Diff_FEMA_FS_props_2020_pct = round((sum(FSatRisk2020) - sum(FEMAatRisk2020))/sum(FEMAatRisk2020),3))
-  
-
-
+  summarise(total_properties = sum(total_properties),
+            fema_2020 = sum(fema_2020),
+            fema_2020_pct = round((sum(fema_2020)/sum(total_properties)),3),
+            fs_2020 = sum(fs_2020),
+            fs_2020_pct = round((sum(fs_2020)/sum(total_properties)),3),
+            fs_2035 = sum(fs_2035),
+            fs_2035_pct = round((sum(fs_2035)/sum(total_properties)),3),
+            fs_2050 = sum(fs_2050),
+            fs_2050_pct = round((sum(fs_2050)/sum(total_properties)),3),
+            fs_fema_diff = sum(fs_2020) - sum(fema_2020),
+            fs_fema_diff_pct = round((sum(fs_2020) - sum(fema_2020))/sum(fema_2020),3)) 
 
 #----------------------------
 #----------------------------
 # Analysis of Counties
 #----------------------------
 #----------------------------
-# Since we only have 25 states right now, I'm going
+
 # tease out the most populous places that show big
 # increases in percentages of properties at risk.
 
@@ -374,22 +315,31 @@ census.county %>%
 # What does the flood risk look like in
 # the largest counties in the U.S.?
 flood.counties %>%
-  filter(totalPop >= 500000) %>%
+  filter(total_population >= 500000) %>%
   summarise(n = n(),
-            totalProperties = sum(totalProperties),
-            FEMAatRisk2020 = sum(FEMAatRisk2020),
-            FEMAatRisk2020pct = round((sum(FEMAatRisk2020)/sum(totalProperties)),3),
-            FSatRisk2020 = sum(FSatRisk2020),
-            FSatRisk2020pct = round((sum(FSatRisk2020)/sum(totalProperties)),3),
-            FSatRisk2035 = sum(FSatRisk2035),
-            FSatRisk2035pct = round((sum(FSatRisk2035)/sum(totalProperties)),3),
-            FSatRisk2050 = sum(FSatRisk2050),
-            FSatRisk2050pct = round((sum(FSatRisk2050)/sum(totalProperties)),3),
-            Diff_FEMA_FS_props_2020 = sum(FSatRisk2020) - sum(FEMAatRisk2020),
-            Diff_FEMA_FS_props_2020_pct = round((sum(FSatRisk2020) - sum(FEMAatRisk2020))/sum(FEMAatRisk2020),3))
+            total_properties = sum(total_properties),
+            fema_2020 = sum(fema_2020),
+            fema_2020_pct = round((sum(fema_2020)/sum(total_properties)),3),
+            fs_2020 = sum(fs_2020),
+            fs_2020_pct = round((sum(fs_2020)/sum(total_properties)),3),
+            fs_2035 = sum(fs_2035),
+            fs_2035_pct = round((sum(fs_2035)/sum(total_properties)),3),
+            fs_2050 = sum(fs_2050),
+            fs_2050_pct = round((sum(fs_2050)/sum(total_properties)),3),
+            fs_fema_diff = sum(fs_2020) - sum(fema_2020),
+            fs_fema_diff_pct = round((sum(fs_2020) - sum(fema_2020))/sum(fema_2020),3),
+            total_population = sum(total_population)) %>%
+  view()
+
 # 39 largest counties
 # FEMA: 295,677 (2%) properties at risk
 # FS 2020: 792,042 (5.4%) properties at risk
+
+#in how many counties are FS numbers greater than FEMA
+flood.counties %>%
+  filter(fs_2020 > fema_2020) %>%
+  summarise(n=n())
+# 2586, or 85%
 
 #----------------------------
 #----------------------------
@@ -402,46 +352,6 @@ flood.counties %>%
 # Set options and load data
 options(tigris_class = "sf")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#----------------------------
-#----------------------------
-# Analysis of ZIP code data
-#----------------------------
-#----------------------------
-
-# load the data:
-flood.zips <- read_csv("/Users/kcrowe/Documents/climate_change/flood_data/first_street/data/ZIP/zip3.csv",
-                       col_types = "ciidididididd")
-
-# Double check the data types
-sapply(flood.zips, class)
-
-# create new column names
-colnames(flood.zips) <- c("zipCode", "totalProperties", "FEMAatRisk2020", "FEMAatRisk2020pct", "FSatRisk2020", 
-                           "FSatRisk2020pct", "FSatRisk2035", "FSatRisk2035pct", "FSatRisk2050", "FSatRisk2050pct", 
-                           "FSfemaDiff", "FSfemaDiffpct", "index")
-
-colnames(flood.zips)
 
 
 
