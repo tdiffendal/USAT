@@ -2,3 +2,5 @@
 
 
 #ignore files:
+census-responses/data/acs_demographics/ACSDP5Y2018.DP05_data_with_overlays_2020-07-02T144029.csv
+census-responses/data/acs_housing/ACSDP5Y2018.DP04_data_with_overlays_2020-07-02T161352.csv
